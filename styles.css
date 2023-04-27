@@ -1,0 +1,90 @@
+/* styles.css */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#contentCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+  
+#gameContainer {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 30px;
+    border: 1px solid #000;
+    width: 800px; 
+    height: 600px;
+}
+
+#gameInfo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#scoreBlock {
+    display: flex;
+    font-size: 20px;
+    margin-left: 15px;
+}
+
+#timerBlock {
+    font-size: 20px;
+    margin-right: 15px;
+}
+
+#startButton {
+    width: fit-content;
+    height: fit-content;
+}
+
+#cardContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 23px;
+}
+
+.cardSpacing {
+    height: 240px;
+    width: 160px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    background-color: red;
+    width: 140px;
+    height: 220px;
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.solved {
+    background-color: green;
+    width: 140px;
+    height: 220px;
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.hidden {
+    display: none;
+}
