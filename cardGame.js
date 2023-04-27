@@ -1,3 +1,5 @@
+//* Timer should continue but score should stop
+
 // Isolated DOM nodes referenced in functions
 const startButton = document.querySelector('#startButton');
 const scoreElement = document.querySelector('#scoreValue');
