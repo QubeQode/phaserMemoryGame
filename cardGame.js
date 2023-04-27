@@ -4,9 +4,6 @@ const scoreElement = document.querySelector('#scoreValue');
 const cardContainer = document.querySelector('#cardContainer');
 const timerElement = document.querySelector('#timerValue');
 
-// Global var used to track current game state
-let gameOver = false;
-
 // Test data
 let values = [
     'A',
@@ -143,33 +140,29 @@ const cardClickHandler = (eventTarget) => {
 };
 
 /**
- * Function starts and runs the countdown timer
+ * Function removes all child elements from card container
  */
-const countdown = () => {
-    let remainingTime = 30;
-  
-    const timerInterval = setInterval(() => {
-      remainingTime--;
-  
-      const minutes = Math.floor(remainingTime / 60);
-      const seconds = remainingTime % 60;
-  
-      timerElement.textContent = `${minutes}:${seconds
-        .toString()
-        .padStart(2, "0")}`;
+const clearDeck = () => {
+    while (cardContainer.firstElementChild) {
+        cardContainer.firstElementChild.remove();
+    };
+}
 
-      scoreElement.innerHTML = remainingTime;
-  
-      if (remainingTime <= 0) {
-        if (!gameOver) {
-          gameOver = true;
-          gameOverDisplay();
-        }
-        clearInterval(timerInterval);
-      }
-    }, 1000);
+/**
+ * Function to display game over message
+ */
+
+function gameOverDisplay() {
+    const gameOverDiv = document.createElement("div");
+    gameOverDiv.innerHTML = "Game Over";
+    gameOverDiv.classList.add("gameOver");
+    cardContainer.appendChild(gameOverDiv);
 };
 
+/**
+ * Function checks whether all matches have been found
+ * @returns {boolean} - value correlates with whether or not all pairs are solved
+ */
 const isComplete = () => {
     const currentUnsolved = Array.from(document.querySelectorAll('.card'));
     if (currentUnsolved.length === 0) {
@@ -179,24 +172,45 @@ const isComplete = () => {
     }
 };
 
-const checkWinCondition = () => {
-    const checkCompletionInterval = setInterval(() => {
-        if (isComplete()) {
-            gameOver = true;
+/**
+ * Function starts and runs the countdown timer
+ */
+const countdown = () => {
+    let remainingTime = 30;
+  
+    const timerInterval = setInterval(() => {
+        remainingTime--;
+
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+
+        timerElement.textContent = `${minutes}:${seconds
+        .toString()
+        .padStart(2, "0")}`;
+
+        scoreElement.innerHTML = remainingTime;
+
+        if (remainingTime <= 0 || isComplete()) {
             gameOverDisplay();
-            clearInterval(checkCompletionInterval);
+            startButton.disabled = false;
+            clearInterval(timerInterval);
         }
-    })
+    }, 1000);
 };
 
 /**
  * Main function that orchestrates mini-game flow
  */
 const startGame = () => {
+    const gameOver = cardContainer.querySelector('.gameOver');
+    if (gameOver) {
+        clearDeck();
+        scoreElement.innerHTML = 30;
+        timerElement.innerHTML = '0:30';
+    }
     startButton.disabled = true;
     generateDeck();
     countdown();
-    checkWinCondition();
 };
 
 document.addEventListener('click', (event) => {

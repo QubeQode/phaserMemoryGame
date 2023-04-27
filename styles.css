@@ -85,6 +85,13 @@ body {
     justify-content: center;
 }
 
+.gameOver {
+    color:black;
+    font-size: 100px;
+    position: relative;
+    top: -3em;
+}
+
 .hidden {
     display: none;
 }
