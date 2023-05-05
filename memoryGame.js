@@ -344,12 +344,14 @@ class StateHandler {
 
             if (card1.texture.key === card2.texture.key) {
                 this.#currentlySolved++;
-                this.emitter.emit('handleMatch', {
-                    card1,
-                    card1Back,
-                    card2,
-                    card2Back,
-                })
+                setTimeout(() => {
+                    this.emitter.emit('handleMatch', {
+                        card1,
+                        card1Back,
+                        card2,
+                        card2Back,
+                    })
+                }, 250);
             }
         }
         this.emitter.emit('flipCard', {cardBack: event.cardBack});
