@@ -11,6 +11,7 @@ memoryGame.preload = function () {
     this.load.image('venusCard', 'assets/venusCard.png');
 };
 
+// Symbolic Constants
 const WIDTH = 800;
 const HEIGHT = 600;
 
@@ -46,7 +47,7 @@ const gameState = [
 ]
 
 /**
- * Function randomly indexes ASSET_VALUES array holding loaded texture names
+ * Function randomly indexes ASSET_VALUES
  * @returns {String} - texture name
  */
 const getRandomCard = () => {
@@ -58,29 +59,52 @@ const getRandomCard = () => {
 
 // Initialize Assets
 memoryGame.create = function () {
+    this.cardBacks = this.add.group();
+    this.cardFaces = this.add.group();
+
 
     /**
-     * Function creates a random card at the card position
-     * @param {[Number, Number]} cardPosition - tuple of card's x, y co-ords 
-     * @returns {Sprite} Sprite class object for the card
+     * Function generates Sprite object for pre-loaded assets
+     * @param {[Number, Number]} cardPosition - coordinates for card
+     * @param {String} textureName  - asset name for card
+     * @returns {Sprite} - Sprite object for newly generated asset
      */
-    const createCard = (cardPosition) => {
-        const textureType = getRandomCard();
-        const card = this.add.sprite(cardPosition[0], cardPosition[1], textureType);
+    const createSprite = (cardPosition, textureName) => {
+        const card = this.add.sprite(cardPosition[0], cardPosition[1], textureName);
         card.setScale(0.15);
         return card;
     }
 
     /**
+     * Function creates a random card at the card position
+     * @param {[Number, Number]} cardPosition - tuple of card's coordinates 
+     * @returns {Sprite} Sprite class object for the card
+     */
+    const createCardFace = (cardPosition) => {
+        const textureType = getRandomCard();
+        return createSprite(cardPosition, textureType);
+    }
+
+    /**
+     * Function generates card back at each card position
+     */
+    const hideCards = () => {
+        PRESET_POSITIONS.forEach(cardPosition => {
+            const card = createSprite(cardPosition, 'cardBack');
+            card.setInteractive()
+            this.cardBacks.add(card);
+        })
+    };
+
+    /**
      * Function creates a deck
-     * @returns {[Sprite]} Array of all card Sprite class objects
+     * @returns {[Sprite]} Array of all card's Sprite class objects
      */
     const createDeck = () => {
-        const deckArrangement = [];
         PRESET_POSITIONS.forEach(cardPosition => {
-            deckArrangement.push(createCard(cardPosition));
+            const card = createCardFace(cardPosition);
+            this.cardFaces.add(card);
         })
-        return deckArrangement;
     };
 
     /**
@@ -92,37 +116,37 @@ memoryGame.create = function () {
             const cardData = {
                 name: deckArray[i].texture.key,
                 isActive: false,
+                isSolved: false,
             };
 
             i < 5 ? gameState[0].push(cardData) : gameState[1].push(cardData);
         };
-    }
-
-    /**
-     * Function generates card back at each card position
-     */
-    const hideCards = () => {
-        PRESET_POSITIONS.forEach(cardPosition => {
-            const card = this.add.sprite(cardPosition[0], cardPosition[1], 'cardBack');
-            card.setScale(0.15);
-        })
-    }
+    };
 
     /**
      * Function orchestrates functions to generate starting deck
      */
     const initializeDeck = () => {
-        const deck = createDeck();
-        saveGameState(deck);
+        createDeck();
+        saveGameState(this.cardFaces.getChildren());
         hideCards();
-    }
+        this.cardBacks.getChildren().forEach (cardBack => {
+            cardBack.on('pointerdown', function () {
+                cardBack.visible = !cardBack.visible;
+            })
+        })
+    };
 
     // Initialize Background
     const background = this.add.sprite(WIDTH/2, HEIGHT/2, 'background');
 
     // Initialize Deck
     initializeDeck();
+    console.log(gameState);
 };
+
+memoryGame.update = function () {
+}
 
 const config = {
     type: Phaser.AUTO,
