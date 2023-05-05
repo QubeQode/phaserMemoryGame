@@ -1,5 +1,7 @@
 const memoryGame = new Phaser.Scene('Game');
 
+let justRunOnceYouLittleShit = false;
+
 /**
  * Main Class that orchestrates the game flow;
  */
@@ -15,23 +17,18 @@ class GameHandler {
     #HEIGHT;
 
     // Class Constructor
-    constructor (width, height, gameScene, cardKeyArray) {
+    constructor (width, height, gameScene) {
         this.#WIDTH = width;
         this.#HEIGHT = height;
         this.#gameScene = gameScene;
         this.#deckRenderer = new DeckRenderer(
-            this.#gameScene, 
-            cardKeyArray, 
+            this.#gameScene,
             this.#WIDTH, 
             this.#HEIGHT,
         );
     };
 
     // Methods
-    test = () => {
-        console.log(this.#gameScene);
-    };
-
     /**
      * Function defines the preload execution sequence for Phaser
      * @param {[String]} assetNameArray - Array of asset names as strings 
@@ -76,6 +73,30 @@ class GameHandler {
         this.definePreload(assetNameArray);
         this.defineCreate();
     };
+
+    addEventListeners = () => {
+        const deckRenderer = this.#deckRenderer;
+        this.#gameScene.update = () => {
+            const emitter = EventDispatcher.getInstance()
+            /**
+             * Listener waits till deck is solved to refresh the available deck
+             */
+            emitter.addListener('deckSolved', () => {
+                if (!justRunOnceYouLittleShit) {
+                    this.#gameScene.sys.cardFaces.children.entries = [];
+                    this.#gameScene.sys.cardBacks.children.entries = [];
+                    deckRenderer.createDeck();
+                    deckRenderer.createCardBacks();
+                    deckRenderer.addCardBackEventListeners();
+                    
+                    const stateHandler = StateHandler.getInstance();
+                    stateHandler.representDeck(this.#gameScene.sys.cardFaces.children.entries);
+                    
+                    justRunOnceYouLittleShit = true;
+                }
+            });
+        };
+    }
 };
 
 /**
@@ -88,15 +109,22 @@ class DeckRenderer {
     // Symbolic Constants
     #WIDTH;
     #HEIGHT;
-    #CARD_KEYS = [];
+    #CARD_KEYS = [
+        'darkBlueAlienCard',
+        'greenAlienCard',
+        'lightBlueAlienCard',
+        'pinkAlienCard',
+        'venusCard',
+        'darkBlueAlienCard',
+        'greenAlienCard',
+        'lightBlueAlienCard',
+        'pinkAlienCard',
+        'venusCard',
+    ];
     #PRESET_POSITIONS = [];
 
-    constructor (gameScene, cardKeyArray, width, height, eventDispatcher) {
+    constructor (gameScene, width, height) {
         this.#gameScene = gameScene;
-        cardKeyArray.forEach(card => {
-            this.#CARD_KEYS.push(card);
-            this.#CARD_KEYS.push(card);
-        });
         this.#WIDTH = width;
         this.#HEIGHT = height;
         this.#PRESET_POSITIONS = [
@@ -121,6 +149,20 @@ class DeckRenderer {
         const randomIndex = Math.floor(Math.random() * this.#CARD_KEYS.length);
         const cardRetrieved = this.#CARD_KEYS[randomIndex];
         this.#CARD_KEYS.splice(randomIndex, 1);
+        if (this.#CARD_KEYS.length === 0) {
+            this.#CARD_KEYS = [
+                'darkBlueAlienCard',
+                'greenAlienCard',
+                'lightBlueAlienCard',
+                'pinkAlienCard',
+                'venusCard',
+                'darkBlueAlienCard',
+                'greenAlienCard',
+                'lightBlueAlienCard',
+                'pinkAlienCard',
+                'venusCard',
+            ];
+        }
         return cardRetrieved;
     };
 
@@ -172,7 +214,6 @@ class DeckRenderer {
      */
     addCardBackEventListeners = () => {
         const allCardBacks = this.#gameScene.sys.cardBacks.children.entries;
-        const allCardFaces = this.#gameScene.sys.cardFaces.children.entries;
 
         /**
          * Converts user click into custom event
@@ -214,10 +255,10 @@ class DeckRenderer {
             })
         });
 
+        /**
+         * Listener destroys matching cards whilst maintaining array length
+         */
         this.emitter.addListener('handleMatch', (event) => {
-            console.log('Card Backs Start', this.#gameScene.sys.cardBacks.children.entries);
-            console.log('Card Faces Start', this.#gameScene.sys.cardFaces.children.entries);
-
             const card1BackIndex = this.#gameScene.sys.cardBacks.children.entries.indexOf(event.card1Back);
             const card1Index = this.#gameScene.sys.cardFaces.children.entries.indexOf(event.card1);
             const card2BackIndex = this.#gameScene.sys.cardBacks.children.entries.indexOf(event.card2Back);
@@ -231,9 +272,6 @@ class DeckRenderer {
             event.card1Back.destroy();
             this.#gameScene.sys.cardBacks.children.entries[card2BackIndex] = null;
             event.card2Back.destroy();
-
-            console.log('Card Backs End', this.#gameScene.sys.cardBacks.children.entries);
-            console.log('Card Faces End', this.#gameScene.sys.cardFaces.children.entries);
         })
     };
 };
@@ -284,7 +322,6 @@ class StateHandler {
         this.#currentDeck.forEach(row => {
             row.sort((a, b) => a.x - b.x);
         })
-        console.log(this.#currentDeck);
     };
 
     #handleUserClicksCardBack = (event) => {
@@ -294,7 +331,6 @@ class StateHandler {
 
         if (this.#currentlySelected.length === 2) {
             this.#currentlySelected = [];
-            console.log('Reset', this.#currentlySelected);
             this.emitter.emit('resetDeck');
         }
 
@@ -305,8 +341,6 @@ class StateHandler {
             const card1Back = this.#currentlySelected[0][1];
             const card2 = this.#currentlySelected[1][0];
             const card2Back = this.#currentlySelected[1][1];
-            console.log(card1.texture.key);
-            console.log(card2.texture.key);
 
             if (card1.texture.key === card2.texture.key) {
                 this.#currentlySolved++;
@@ -318,8 +352,18 @@ class StateHandler {
                 })
             }
         }
-
         this.emitter.emit('flipCard', {cardBack: event.cardBack});
+
+        if (this.#currentlySolved === 5) {
+            justRunOnceYouLittleShit = false;
+            this.#currentDeck.shift();
+            this.#currentDeck.shift();
+            this.#currentDeck.unshift([]);
+            this.#currentDeck.unshift([]);
+            this.#currentlySelected = [];
+            this.#currentlySolved = 0;
+            this.emitter.emit('deckSolved');
+        }
     };
 
     addEventListeners = () => {
@@ -331,15 +375,9 @@ class StateHandler {
 const gameHandler = new GameHandler(
     800, 
     600, 
-    memoryGame, 
-    [
-        'darkBlueAlienCard',
-        'greenAlienCard',
-        'lightBlueAlienCard',
-        'pinkAlienCard',
-        'venusCard',
-    ]
+    memoryGame
 );
+gameHandler.addEventListeners();
 gameHandler.initializeGame([
     'background',
     'darkBlueAlienCard',
