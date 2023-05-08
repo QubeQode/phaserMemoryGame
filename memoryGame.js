@@ -116,7 +116,7 @@ class GameHandler {
 
             emitter.addListener('gameOver', () => {
                 emitter.destroy();
-                if (!justRunOnceYouLittleShit) {
+                if (gameIsStarted) {
                     this.#gameScene.gameOverText = this.#gameScene.add.text(
                         this.#gameScene.sys.game.config.width / 2,
                         this.#gameScene.sys.game.config.height / 2,
@@ -125,7 +125,7 @@ class GameHandler {
                     this.#gameScene.gameOverText.setScale(2);
                     this.#gameScene.gameOverText.depth = 2;
 
-                    justRunOnceYouLittleShit = true;
+                    gameIsStarted = false;
                 }
             })
         };
